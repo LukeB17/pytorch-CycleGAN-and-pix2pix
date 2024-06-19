@@ -19,6 +19,7 @@ See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-p
 See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
 """
 import time
+import numpy as np
 from options.train_options import TrainOptions
 from data import create_dataset
 from models import create_model
@@ -35,6 +36,18 @@ if __name__ == '__main__':
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
     total_iters = 0                # the total number of training iterations
 
+    "Omaa koodia training tulosten tallennukseen"
+
+    #total iterations = (n_epochs + n_epochs_decay)*dataset_size
+    # => list dimension = total_iterations/opt.prin_tfreq
+    
+    list_dimension = ((opt.n_epochs + opt.n_epochs_decay)*dataset_size)/opt.print_freq
+    epoch_iter_list = np.zeros(list_dimension) #save time point (iterations within epoch) for each loss value
+    total_iter_list = np.zeros(list_dimension) #save time point (total number of iterations) for each loss value
+
+    loss_list = np.zeros((4, list_dimension)) #save loss statistics as numpy array 
+    #order: 0 = G_GAN, 1 = G_L1, 2 = D_real, 3 = D_fake
+    list_index = 0
     for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
         iter_data_time = time.time()    # timer for data loading per iteration
@@ -60,6 +73,15 @@ if __name__ == '__main__':
                 losses = model.get_current_losses()
                 t_comp = (time.time() - iter_start_time) / opt.batch_size
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t_comp, t_data)
+                "omaa koodia"
+                ind = 0
+                epoch_iter_list[list_index] = epoch_iter
+                total_iter_list[list_index] = total_iters
+                total_iter_list.append(total_iters)
+                for k, v in losses.items(): #for key and value
+                    loss_list[ind, list_index] = v
+                    ind += 1
+                list_index += 1
                 if opt.display_id > 0:
                     visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, losses)
 
@@ -75,3 +97,7 @@ if __name__ == '__main__':
             model.save_networks(epoch)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
+        
+    np.save(f"/m/nbe/scratch/bone_modelling/pytorch-CycleGAN-and-pix2pix/checkpoints/{opt.name}/loss_list.npy", loss_list)
+    np.save(f"/m/nbe/scratch/bone_modelling/pytorch-CycleGAN-and-pix2pix/checkpoints/{opt.name}/epoch_iter_list.npy", epoch_iter_list)
+    np.save(f"/m/nbe/scratch/bone_modelling/pytorch-CycleGAN-and-pix2pix/checkpoints/{opt.name}/total_iter_list.npy", total_iter_list)
