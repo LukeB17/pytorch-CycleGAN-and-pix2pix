@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #total iterations = (n_epochs + n_epochs_decay)*dataset_size
     # => list dimension = total_iterations/opt.prin_tfreq
     
-    list_dimension = ((opt.n_epochs + opt.n_epochs_decay)*dataset_size)/opt.print_freq
+    list_dimension = int(((opt.n_epochs + opt.n_epochs_decay)*dataset_size)/opt.print_freq)
     epoch_iter_list = np.zeros(list_dimension) #save time point (iterations within epoch) for each loss value
     total_iter_list = np.zeros(list_dimension) #save time point (total number of iterations) for each loss value
 
