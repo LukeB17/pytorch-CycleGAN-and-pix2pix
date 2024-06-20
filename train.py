@@ -77,7 +77,7 @@ if __name__ == '__main__':
                 ind = 0
                 epoch_iter_list[list_index] = epoch_iter
                 total_iter_list[list_index] = total_iters
-                total_iter_list.append(total_iters)
+                
                 for k, v in losses.items(): #for key and value
                     loss_list[ind, list_index] = v
                     ind += 1
